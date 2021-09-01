@@ -1,30 +1,48 @@
 <template>
-  <div id="nav">
-    <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link>
+  <router-view v-slot="{ Component }">
+    <transition>
+      <keep-alive exclude="Episode">
+        <component :is="Component" />
+      </keep-alive>
+    </transition>
+  </router-view>
+  <div class="bottom-player">
+    <Player />
   </div>
-  <router-view/>
 </template>
 
+<script lang="ts">
+import { defineComponent } from 'vue';
+import Player from '@/components/Player.vue';
+
+export default defineComponent({
+  components: {
+    Player
+  }
+})
+</script>
+
 <style lang="scss">
+html,
+body {
+  background-color: #2c3e50;
+  color: white;
+  padding: 0;
+  margin: 0;
+}
+
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
 }
 
-#nav {
-  padding: 30px;
-
-  a {
-    font-weight: bold;
-    color: #2c3e50;
-
-    &.router-link-exact-active {
-      color: #42b983;
-    }
-  }
+.bottom-player {
+  width: 100%;
+  height: 80px;
+  background-color: #0006;
+  backdrop-filter: blur(8px);
+  position: fixed;
+  bottom: 0;
 }
 </style>
