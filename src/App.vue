@@ -6,18 +6,33 @@
       </keep-alive>
     </transition>
   </router-view>
-  <div class="bottom-player">
+  <div
+    v-show="showPlayer"
+    class="fixed-bottom"
+  >
     <Player />
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent, onBeforeUnmount, ref } from 'vue';
 import Player from '@/components/Player.vue';
+import bus from '@/bus.ts';
 
 export default defineComponent({
   components: {
     Player
+  },
+  setup() {
+    const showPlayer = ref<boolean>(false);
+    const requestHandler = () => {
+      showPlayer.value = true;
+    };
+    bus.on('request', requestHandler);
+    onBeforeUnmount(() => {
+      bus.off('request', requestHandler);
+    });
+    return { showPlayer };
   }
 })
 </script>
@@ -37,11 +52,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-.bottom-player {
+.fixed-bottom {
   width: 100%;
-  height: 80px;
-  background-color: #0006;
-  backdrop-filter: blur(8px);
   position: fixed;
   bottom: 0;
 }
