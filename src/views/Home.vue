@@ -1,14 +1,14 @@
 <template>
   <div class="channel">
     <ChannelHeader
-      :imgSrc="imgSrc"
-      :title="title"
+      :imgSrc="storeState.feed.image.url"
+      :title="storeState.feed.title"
     />
 
     <div class="episodes">
       <div
         class="episode"
-        v-for="(episode, idx) in episodes"
+        v-for="(episode, idx) in storeState.feed.items"
         :key="idx"
         @click="navTo(episode)"
       >
@@ -30,52 +30,26 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { format } from 'date-fns';
-import RSSParser from 'rss-parser';
+import store from '@/simpleStore';
 import ChannelHeader from '@/components/ChannelHeader.vue';
-
-const CORS_PROXY = 'https://cors-anywhere.herokuapp.com/';
-const feedUrl =
-  'https://api.soundon.fm/v2/podcasts/954689a5-3096-43a4-a80b-7810b219cef3/feed.xml';
 
 export default defineComponent({
   name: "Home",
   components: {
     ChannelHeader
   },
-  props: ['feed'],
   data() {
     return {
-      imgSrc: '' as string,
-      title: '' as string,
-      episodes: [] as any[],
+      storeState: store.state
     };
-    },
-    async created() {
-      let parser = new RSSParser();
-      let feed = await parser.parseURL(CORS_PROXY + feedUrl);
-      if (feed.title && feed.image) {
-        this.imgSrc = feed.image.url;
-        this.title = feed.title;
-        console.log(feed);
-        this.episodes = feed.items;
-      }
   },
   methods: {
     dateFormat(input: string): string {
       return format(new Date(input), 'yyyy-MM-dd');
     },
     navTo(episode: any): void {
-      const { guid, title, enclosure, itunes } = episode;
       this.$router.push({
-        name: 'Episode', params: {
-          guid,
-          // above will be assigned to attrs
-          imgSrc: itunes.image,
-          title,
-          htmlDesc: episode['content:encoded'],
-          mediaType: enclosure.type,
-          mediaUrl: enclosure.url
-        }
+        name: 'Episode', params: { guid: episode.guid }
       });
     }
   }

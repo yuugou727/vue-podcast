@@ -37,6 +37,8 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+@import '/src/variables.scss';
+
 .header {
   display: flex;
   align-items: flex-end;
@@ -63,15 +65,16 @@ export default defineComponent({
     button {
       font-size: 16px;
       background-color: transparent;
-      color: white;
-      border: 2px solid white;
+      color: $theme-color;
+      border: 2px solid $theme-color;
       border-radius: 6px;
       padding: 6px 14px;
+      margin-bottom: 12px;
       cursor: pointer;
 
       &:hover {
-        background-color: white;
-        color: #2c3e50;
+        background-color: $theme-color;
+        color: $bg-color;
       }
     }
   }

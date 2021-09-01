@@ -12,7 +12,11 @@ const routes: Array<RouteRecordRaw> = [
     name: 'Episode',
     component: Episode,
     props: true
-  }
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: '/'
+  },
 ]
 
 const router = createRouter({

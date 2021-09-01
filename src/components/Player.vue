@@ -9,7 +9,7 @@
       <button
         type="button"
         class="action-button"
-        @click="togglePlay()"
+        @click="togglePlay"
         :disabled="isEmpty"
       >
         <span v-show="isPlaying">
@@ -19,7 +19,7 @@
           <i class="far fa-play-circle"></i>
         </span>
       </button>
-      <p class="title">{{ mediaTitle }}</p>
+      <p class="title">{{ playingEp.title }}</p>
       <div class="hint">
         <span v-show="isLoading">
           <i class="fas fa-spinner fa-pulse"></i>
@@ -31,13 +31,13 @@
           <i class="fas fa-exclamation-triangle"></i>
         </span>
       </div>
-      <p class="duration">{{ formatTime(playTime)}}/{{formatTime(duration) }}</p>
+      <p class="duration">{{ formatTime(playTime)}} / {{formatTime(duration) }}</p>
     </div>
     <audio
       ref="audioPlayer"
       autoplay
-      :src="mediaUrl"
-      :type="mediaType"
+      :src="playingEp.mediaUrl"
+      :type="playingEp.mediaType"
     >
     </audio>
   </div>
@@ -48,41 +48,28 @@ import { defineComponent, onBeforeUnmount, onMounted, ref } from 'vue';
 import { library, dom } from '@fortawesome/fontawesome-svg-core';
 import { faPlayCircle, faPauseCircle } from '@fortawesome/free-regular-svg-icons';
 import { faSpinner, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
-
-import bus from '@/bus.ts';
+import store from '@/simpleStore';
 
 export default defineComponent({
   name: 'Player',
   setup() {
+    // template ref
     const audioPlayer = ref<HTMLAudioElement | null>(null);
     const progressBar = ref<HTMLProgressElement | null>(null);
+    // audio properties
     const isPlaying = ref<boolean>(true);
     const isEmpty = ref<boolean>(true);
     const isLoading = ref<boolean>(false);
     const isError = ref<boolean>(false);
     const duration = ref<number>(0);
     const playTime = ref<number>(0);
-    const mediaTitle = ref<string>('');
-    const mediaGuid = ref<string>('');
-    const mediaUrl = ref<string>('');
-    const mediaType = ref<string>('');
+    // store getter
+    const playingEp = store.getPlayingEp();
 
     /** Font-awesome */
     library.add(faPlayCircle, faPauseCircle, faSpinner, faExclamationTriangle);
     onMounted(() => {
       dom.i2svg();
-    });
-
-    /** bus event */
-    const requestHandler = ({ title, guid, type, url }: { title: string, guid: string, type: string, url: string }) => {
-      mediaTitle.value = title;
-      mediaGuid.value = guid;
-      mediaType.value = type;
-      mediaUrl.value = url;
-    }
-    bus.on('request', requestHandler);
-    onBeforeUnmount(() => {
-      bus.off('request', requestHandler);
     })
 
     /** customize audio player events */
@@ -120,7 +107,7 @@ export default defineComponent({
       (event.target as HTMLAudioElement).pause();
     };
     const endHandler = (): void => {
-      bus.emit('playEnd', { guid: mediaGuid.value });
+      store.requestNextEp(playingEp.value.guid);
     };
 
     onMounted((): void => {
@@ -176,9 +163,8 @@ export default defineComponent({
       isError,
       playTime,
       duration,
-      mediaTitle,
-      mediaUrl,
-      mediaType,
+      // computed store
+      playingEp,
       // refs
       progressBar,
       audioPlayer,
@@ -191,6 +177,9 @@ export default defineComponent({
 </script>
 
 <style scoped lang="scss">
+@use 'sass:color';
+@import '/src/variables.scss';
+
 .player {
   display: flex;
   flex-wrap: wrap;
@@ -212,8 +201,8 @@ export default defineComponent({
     }
 
     &[value]::-webkit-progress-value {
-      background: #4cd9f1;
-      box-shadow: 2px 0 8px #30e0ffdd;
+      background: color.adjust($theme-color, $lightness: 5%);
+      box-shadow: 0 0 8px color.adjust($theme-color, $lightness: 10%);
     }
   }
 
@@ -253,7 +242,7 @@ export default defineComponent({
     .hint span {
       font-size: 18px;
       &.error {
-        color: coral;
+        color: $error-color;
       }
     }
 
