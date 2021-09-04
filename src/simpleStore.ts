@@ -1,33 +1,5 @@
 import { computed, ComputedRef, reactive } from 'vue';
-
-type IFeed = {
-  title: string;
-  image: {
-    link: string;
-    title: string;
-    url: string;
-  };
-  items: IEpisode[];
-  [key: string]: any;
-}
-
-interface IEpisode {
-  content: string;
-  'content:encoded': string;
-  itunes: {
-    image: string;
-    episode: string;
-    [key: string]: any
-  };
-  guid: string;
-  enclosure: {
-    length: string;
-    type: string;
-    url: string;
-  };
-  [key: string]: any;
-}
-
+import { IEpisode, IFeed } from './interfaces/feed.interface';
 interface IPlayingEp {
   guid: string;
   title: string;
@@ -55,7 +27,7 @@ const store = {
   }),
 
   /** Setters (Commit Mutation) */
-  setFeed(newValue: any): void {
+  setFeed(newValue: IFeed): void {
     this.state.feed = { ...newValue };
   },
 
@@ -64,12 +36,20 @@ const store = {
   },
 
   /** Getters: computedRef */
+  getFeed(): ComputedRef<IFeed> {
+    return computed(() => this.state.feed);
+  },
+
   getEpisode(guid: string): ComputedRef<IEpisode | undefined> {
     return computed(() => this.state.feed.items.find((el: IEpisode) => el.guid === guid));
   },
 
   getPlayingEp(): ComputedRef<IPlayingEp> {
     return computed(() => this.state.playingEp);
+  },
+
+  getIsNowPlaying(guid: string): ComputedRef<boolean>{
+    return computed(() => guid === this.state.playingEp.guid);
   },
 
   /** Actions */

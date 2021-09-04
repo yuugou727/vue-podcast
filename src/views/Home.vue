@@ -1,14 +1,14 @@
 <template>
   <div class="channel">
     <ChannelHeader
-      :imgSrc="storeState.feed.image.url"
-      :title="storeState.feed.title"
+      :imgSrc="feed.image.url"
+      :title="feed.title"
     />
 
     <div class="episodes">
       <div
         class="episode"
-        v-for="(episode, idx) in storeState.feed.items"
+        v-for="(episode, idx) in feed.items"
         :key="idx"
         @click="navTo(episode)"
       >
@@ -30,6 +30,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { format } from 'date-fns';
+import { IEpisode } from '@/interfaces/feed.interface';
 import store from '@/simpleStore';
 import ChannelHeader from '@/components/ChannelHeader.vue';
 
@@ -40,14 +41,14 @@ export default defineComponent({
   },
   data() {
     return {
-      storeState: store.state
+      feed: store.getFeed()
     };
   },
   methods: {
     dateFormat(input: string): string {
       return format(new Date(input), 'yyyy-MM-dd');
     },
-    navTo(episode: any): void {
+    navTo(episode: IEpisode): void {
       this.$router.push({
         name: 'Episode', params: { guid: episode.guid }
       });

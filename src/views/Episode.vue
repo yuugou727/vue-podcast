@@ -1,13 +1,14 @@
 <template>
   <div class="episode">
     <ChannelHeader
-      :imgSrc="imgSrc"
-      :title="title"
+      :imgSrc="episode?.itunes.image"
+      :title="episode?.title"
       :showPlayBtn="true"
-      @onPlay="play"
+      :isNowPlaying="isNowPlaying"
+      @onPlay="play()"
     />
     <div class="description">
-      <p>{{parsedContent}}</p>
+      <p>{{episode?.content}}</p>
     </div>
   </div>
 </template>
@@ -29,21 +30,23 @@ export default defineComponent({
       default: ''
     }
   },
-  setup(props) {
-    const episode = store.getEpisode(props.guid).value;
-    if (!episode) {
+  data() {
+    return {
+      episode: store.getEpisode(this.guid),
+      isNowPlaying: store.getIsNowPlaying(this.guid),
+    }
+  },
+  mounted() {
+    if (!this.episode) {
       // fallback to channel page
       const router = useRouter();
       router.replace({ name: 'Home' });
-      return;
     }
-    const { content, itunes, title } = episode;
-    const imgSrc = itunes.image;
-    const parsedContent = content.trim();
-    const play = () => {
-      store.requestPlay(props.guid);
+  },
+  methods: {
+    play(): void {
+      store.requestPlay(this.guid);
     }
-    return { imgSrc, title, parsedContent, play }
   }
 })
 </script>

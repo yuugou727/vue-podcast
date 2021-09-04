@@ -10,12 +10,14 @@
     <h3 class="title">{{ title }}</h3>
     <div
       v-if="showPlayBtn"
-      class="playbutton"
+      class="play-container"
     >
       <button
         type="button"
+        class="play-btn"
         @click="$emit('onPlay')"
-      >PLAY</button>
+        :disabled="isNowPlaying"
+      >{{ isNowPlaying ? 'ON AIR' : 'PLAY' }}</button>
     </div>
   </div>
 </template>
@@ -28,7 +30,8 @@ export default defineComponent({
   props: {
     imgSrc: String,
     title: String,
-    showPlayBtn: Boolean
+    showPlayBtn: Boolean,
+    isNowPlaying: Boolean
   },
   emits: [
     'onPlay'
@@ -59,10 +62,10 @@ export default defineComponent({
     font-size: 36px;
   }
 
-  .playbutton {
+  .play-container {
     margin-left: auto;
 
-    button {
+    .play-btn {
       font-size: 16px;
       background-color: transparent;
       color: $theme-color;
@@ -70,11 +73,17 @@ export default defineComponent({
       border-radius: 6px;
       padding: 6px 14px;
       margin-bottom: 12px;
-      cursor: pointer;
+      white-space: nowrap;
 
-      &:hover {
+      &:disabled {
+        color: orange;
+        border-color: orange;
+      }
+
+      &:not(:disabled):hover {
         background-color: $theme-color;
         color: $bg-color;
+        cursor: pointer;
       }
     }
   }

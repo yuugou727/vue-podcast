@@ -16,9 +16,10 @@
 
 <script lang="ts">
 import { defineComponent, onBeforeMount } from 'vue';
-import Player from '@/components/Player.vue';
 import RSSParser from 'rss-parser';
+import { IFeed } from './interfaces/feed.interface';
 import store from '@/simpleStore';
+import Player from '@/components/Player.vue';
 
 const CORS_PROXY = 'https://cors-anywhere.herokuapp.com/';
 const feedUrl = 'https://api.soundon.fm/v2/podcasts/954689a5-3096-43a4-a80b-7810b219cef3/feed.xml';
@@ -30,7 +31,7 @@ export default defineComponent({
   setup() {
     const nowPlaying = store.getPlayingEp();
     onBeforeMount(async () => {
-      let parser = new RSSParser();
+      let parser = new RSSParser<IFeed>();
       let feed = await parser.parseURL(CORS_PROXY + feedUrl);
       if (feed) {
         store.setFeed(feed);

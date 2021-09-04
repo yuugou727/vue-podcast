@@ -1,21 +1,26 @@
 <template>
   <div class="player">
     <progress
-      ref="progressBar"
       :value="playTime"
       :max="duration"
+      @click="seekHandler($event)"
     ></progress>
     <div class="controls">
       <button
         type="button"
         class="action-button"
-        @click="togglePlay"
-        :disabled="isEmpty"
+        @click="togglePlay()"
       >
-        <span v-show="isPlaying">
+        <span
+          v-show="isPlaying"
+          class="pause-icon"
+        >
           <i class="far fa-pause-circle"></i>
         </span>
-        <span v-show="!isPlaying">
+        <span
+          v-show="!isPlaying"
+          class="play-icon"
+        >
           <i class="far fa-play-circle"></i>
         </span>
       </button>
@@ -38,13 +43,22 @@
       autoplay
       :src="playingEp.mediaUrl"
       :type="playingEp.mediaType"
+      @emptied="emptiedHandler()"
+      @durationchange="durationHandler($event)"
+      @play="playHandler()"
+      @playing="playHandler()"
+      @pause="pauseHandler()"
+      @timeupdate="timeupdateHandler($event)"
+      @waiting="waitingHandler()"
+      @stalled="stalledHandler($event)"
+      @ended="endHandler()"
     >
     </audio>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, onBeforeUnmount, onMounted, ref } from 'vue';
+import { defineComponent } from 'vue';
 import { library, dom } from '@fortawesome/fontawesome-svg-core';
 import { faPlayCircle, faPauseCircle } from '@fortawesome/free-regular-svg-icons';
 import { faSpinner, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
@@ -52,133 +66,82 @@ import store from '@/simpleStore';
 
 export default defineComponent({
   name: 'Player',
-  setup() {
-    // template ref
-    const audioPlayer = ref<HTMLAudioElement | null>(null);
-    const progressBar = ref<HTMLProgressElement | null>(null);
-    // audio properties
-    const isPlaying = ref<boolean>(true);
-    const isEmpty = ref<boolean>(true);
-    const isLoading = ref<boolean>(false);
-    const isError = ref<boolean>(false);
-    const duration = ref<number>(0);
-    const playTime = ref<number>(0);
-    // store getter
-    const playingEp = store.getPlayingEp();
-
-    /** Font-awesome */
+  data() {
+    return {
+      isPlaying: true,
+      isLoading: true,
+      isError: false,
+      duration: 0,
+      playTime: 0,
+      playingEp: store.getPlayingEp()
+    }
+  },
+  created() {
     library.add(faPlayCircle, faPauseCircle, faSpinner, faExclamationTriangle);
-    onMounted(() => {
-      dom.i2svg();
-    })
-
-    /** customize audio player events */
-    const seekHandler = (event: MouseEvent) => {
+  },
+  mounted() {
+    // Rendered icons will be transfered once. Therefore use 'v-show' instead of 'v-if'.
+    dom.i2svg();
+  },
+  methods: {
+    seekHandler(event: MouseEvent): void {
       const progress = event.target as HTMLProgressElement;
-      (audioPlayer.value as HTMLAudioElement).currentTime = Math.floor(duration.value) * (event.offsetX / progress.offsetWidth);
-    }
-    const emptyHandler = () => {
-      isEmpty.value = true;
-      isLoading.value = true;
-      duration.value = 0;
-    };
-    const metaHandler = (event: Event): void => {
-      isEmpty.value = false;
-      duration.value = (event.target as HTMLAudioElement).duration;
-    };
-    const playHandler = (): void => {
-      isPlaying.value = true;
-      isLoading.value = false;
-      isError.value = false;
-    };
-    const pauseHandler = (): void => {
-      isPlaying.value = false;
-    };
-    const timeupdateHandler = (event: Event): void => {
+      (this.$refs.audioPlayer as HTMLAudioElement).currentTime = Math.floor(this.duration) * (event.offsetX / progress.offsetWidth);
+    },
+    emptiedHandler(): void {
+      this.isLoading = true;
+      this.duration = 0;
+    },
+    durationHandler(event: Event): void {
+      this.duration = (event.target as HTMLAudioElement).duration;
+    },
+    playHandler(): void {
+      this.isPlaying = true;
+      this.isLoading = false;
+      this.isError = false;
+    },
+    pauseHandler(): void {
+      this.isPlaying = false;
+    },
+    timeupdateHandler(event: Event): void {
       const { currentTime } = (event.target as HTMLAudioElement);
-      playTime.value = currentTime;
-    }
-    const waitingHandler = (): void => {
-      isLoading.value = true;
-    };
-    const stalledHandler = (event: Event): void => {
-      isLoading.value = false;
-      isError.value = true;
+      this.playTime = currentTime;
+    },
+    waitingHandler(): void {
+      this.isLoading = true;
+    },
+    stalledHandler(event: Event): void {
+      this.isPlaying = false;
+      this.isLoading = false;
+      this.isError = true;
       (event.target as HTMLAudioElement).pause();
-    };
-    const endHandler = (): void => {
-      store.requestNextEp(playingEp.value.guid);
-    };
-
-    onMounted((): void => {
-      progressBar.value?.addEventListener('click', seekHandler);
-      const player = audioPlayer.value as HTMLAudioElement;
-      player.addEventListener('emptied', emptyHandler);
-      player.addEventListener('loadedmetadata', metaHandler);
-      player.addEventListener('play', playHandler);
-      player.addEventListener('playing', playHandler);
-      player.addEventListener('pause', pauseHandler);
-      player.addEventListener('timeupdate', timeupdateHandler);
-      player.addEventListener('waiting', waitingHandler);
-      player.addEventListener('stalled', stalledHandler);
-      player.addEventListener('ended', endHandler);
-    });
-    onBeforeUnmount((): void => {
-      progressBar.value?.removeEventListener('click', seekHandler);
-      const player = audioPlayer.value as HTMLAudioElement;
-      player.removeEventListener('emptied', emptyHandler);
-      player.removeEventListener('loadedmetadata', metaHandler);
-      player.removeEventListener('play', playHandler);
-      player.removeEventListener('playing', playHandler);
-      player.removeEventListener('pause', pauseHandler);
-      player.removeEventListener('timeupdate', timeupdateHandler);
-      player.removeEventListener('waiting', waitingHandler);
-      player.removeEventListener('stalled', stalledHandler);
-      player.removeEventListener('ended', endHandler);
-    });
-
-    /** methods */
-    const togglePlay = (): void => {
-      if (isPlaying.value) {
-        audioPlayer.value?.pause();
+    },
+    endHandler(): void {
+      store.requestNextEp(this.playingEp.guid);
+    },
+    togglePlay(): void {
+      const player = this.$refs.audioPlayer as HTMLAudioElement;
+      if (this.isPlaying) {
+        player.pause();
       } else {
-        audioPlayer.value?.play();
+        player.play();
       }
-      isPlaying.value = !isPlaying.value;
-    }
-
-    const formatTime = (seconds: number): string => {
+    },
+    formatTime(seconds: number): string {
       seconds = Math.round(seconds)
       const sec = (seconds % 60).toString().padStart(2, '0');
       const min = Math.floor((seconds / 60) % 60).toString().padStart(2, '0');
       const hr = Math.floor(seconds / 3600).toString().padStart(2, '0');
-      const showHr = duration.value >= 60 * 60 * 60;
+      const showHr = this.duration >= 60 * 60 * 60;
       return `${showHr ? hr + ':' : ''}${min}:${sec}`;
     }
-
-    return {
-      isEmpty,
-      isLoading,
-      isPlaying,
-      isError,
-      playTime,
-      duration,
-      // computed store
-      playingEp,
-      // refs
-      progressBar,
-      audioPlayer,
-      // methods
-      formatTime,
-      togglePlay,
-    };
-  },
+  }
 });
 </script>
 
 <style scoped lang="scss">
 @use 'sass:color';
-@import '/src/variables.scss';
+@import "/src/variables.scss";
 
 .player {
   display: flex;
