@@ -1,7 +1,7 @@
 <template>
   <div class="channel">
     <ChannelHeader
-      :imgSrc="feed.image.url"
+      :imgSrc="feed.image?.url"
       :title="feed.title"
     />
 
@@ -14,7 +14,7 @@
       >
         <div class="image-container">
           <img
-            :src="episode.itunes.image"
+            :src="episode.itunes?.image"
             loading="lazy"
           >
         </div>

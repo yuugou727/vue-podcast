@@ -6,7 +6,7 @@ export type IFeed = {
     url: string;
   };
   items: IEpisode[];
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface IEpisode {
@@ -27,5 +27,5 @@ export interface IEpisode {
     type: string;
     url: string;
   };
-  [key: string]: any;
+  [key: string]: unknown;
 }

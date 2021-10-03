@@ -16,7 +16,7 @@
 
 <script lang="ts">
 import { defineComponent, onBeforeMount } from 'vue';
-import RSSParser from 'rss-parser';
+import RssParser from 'rss-parser';
 import { IFeed } from './interfaces/feed.interface';
 import store from '@/simpleStore';
 import Player from '@/components/Player.vue';
@@ -31,10 +31,14 @@ export default defineComponent({
   setup() {
     const nowPlaying = store.getPlayingEp();
     onBeforeMount(async () => {
-      let parser = new RSSParser<IFeed>();
-      let feed = await parser.parseURL(CORS_PROXY + feedUrl);
-      if (feed) {
-        store.setFeed(feed);
+      try {
+        const parser = new RssParser<IFeed>();
+        const feed = await parser.parseURL(CORS_PROXY + feedUrl);
+        if (feed) {
+          store.setFeed(feed);
+        }
+      } catch (err: unknown) {
+        console.log(err);
       }
     })
     return { nowPlaying };
@@ -43,7 +47,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
-@import '/src/variables.scss';
+@import "/src/variables.scss";
 
 html,
 body {

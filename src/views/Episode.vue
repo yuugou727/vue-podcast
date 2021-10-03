@@ -1,7 +1,7 @@
 <template>
   <div class="episode">
     <ChannelHeader
-      :imgSrc="episode?.itunes.image"
+      :imgSrc="episode?.itunes?.image"
       :title="episode?.title"
       :showPlayBtn="true"
       :isNowPlaying="isNowPlaying"
